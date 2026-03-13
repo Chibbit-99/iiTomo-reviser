@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>iiTomo 1 — Comprehensive Revision Trainer</title>
+<style>
+:root {
+  --accent: #6b21a8;
+  --accent-2: #3b82f6;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --muted: #64748b;
+  --muted-bg: #f1f5f9;
+  --success: #10b981;
+  --danger: #ef4444;
+  --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  --border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+  color: #0f172a;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app {
+  width: 1000px;
+  max-width: 100%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  border: var(--border);
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+.header {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 16px; padding-bottom: 16px; border-bottom: var(--border);
+}
+.brand { display: flex; gap: 16px; align-items: center; }
+.logo {
+  width: 50px; height: 50px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 22px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+.title h1 { margin: 0; font-size: 20px; }
+.title p { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+
+.mode-switch {
+  display: flex; background: var(--muted-bg); padding: 4px; border-radius: 10px; border: var(--border);
+}
+.mode-btn {
+  background: transparent; border: none; padding: 8px 16px;
+  border-radius: 8px; font-weight: 600; cursor: pointer; color: var(--muted);
+  transition: all 0.2s;
+}
+.mode-btn.active {
+  background: var(--card); color: var(--accent-2); box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.main { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.left-panel { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.card-scene { perspective: 1000px; width: 100%; height: 240px; }
+.card {
+  width: 100%; height: 100%; position: relative;
+  transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+  cursor: pointer;
+}
+.card.is-flipped { transform: rotateY(180deg); }
+.card-face {
+  position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: 16px; padding: 20px; text-align: center;
+}
+.card-front { background: var(--card); border: var(--border); box-shadow: var(--shadow); }
+.card-back {
+  background: linear-gradient(180deg, #f8fafc, #eef2ff);
+  transform: rotateY(180deg); border: var(--border); box-shadow: var(--shadow);
+}
+.jp-text { font-size: 38px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+.sub-text { font-size: 16px; color: var(--muted); }
+.badge {
+  position: absolute; top: 16px; left: 16px;
+  background: var(--muted-bg); color: var(--muted); font-size: 11px;
+  padding: 4px 8px; border-radius: 6px; text-transform: uppercase; font-weight: 600;
+}
+
+.card-controls { display: flex; gap: 8px; width: 100%; }
+.btn {
+  flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 600; font-size: 14px;
+  cursor: pointer; transition: all 0.15s; background: var(--card); border: var(--border);
+  color: #0f172a; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.btn:hover { background: #f1f5f9; }
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: linear-gradient(90deg, var(--accent-2), #6366f1);
+  color: white; border: none;
+}
+.btn-primary:hover { background: linear-gradient(90deg, #2563eb, #4f46e5); color: white; }
+
+.right-panel { display: flex; flex-direction: column; gap: 16px; }
+.panel-box {
+  background: var(--card); padding: 20px; border-radius: 16px;
+  border: var(--border); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+}
+.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.panel-title { font-weight: 700; font-size: 16px; }
+.stats { font-size: 14px; color: var(--muted); font-weight: 500; }
+.stats span { color: var(--accent-2); font-weight: 700; }
+
+.input-wrapper { display: flex; flex-direction: column; gap: 8px; }
+.input-field {
+  width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #e2e8f0;
+  font-size: 16px; transition: border-color 0.2s; outline: none;
+}
+.input-field:focus { border-color: var(--accent-2); }
+.hint { font-size: 12px; color: var(--muted); }
+
+.feedback {
+  margin-top: 12px; font-weight: 600; font-size: 14px; padding: 12px;
+  border-radius: 10px; display: none;
+}
+.feedback.show { display: block; animation: popIn 0.3s ease; }
+.feedback.ok { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+.feedback.bad { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.setting-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+
+.confetti {
+  position: fixed; width: 8px; height: 8px; border-radius: 2px;
+  pointer-events: none; opacity: 0; z-index: 50;
+}
+@keyframes popIn { 0% { opacity: 0; transform: translateY(-5px); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes drop { 0% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); } 100% { opacity: 0; transform: translateY(100px) scale(0.5) rotate(180deg); } }
+
+@media (max-width: 768px) { .main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="brand">
+      <div class="logo">いT</div>
+      <div class="title">
+        <h1>iiTomo 1 — Revision Trainer</h1>
+        <p>Active Recall: Hiragana, Ch 1 & Ch 2</p>
+      </div>
+    </div>
+    <div class="mode-switch">
+      <button class="mode-btn active" id="btnVocab">Vocab Mode</button>
+      <button class="mode-btn" id="btnSentences">Sentence Mode</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="left-panel">
+      <div class="card-scene">
+        <div class="card" id="studyCard">
+          <div class="card-face card-front">
+            <span class="badge" id="cardBadge">Type</span>
+            <div class="jp-text" id="frontJp">...</div>
+            <div class="sub-text" id="frontHint" style="display:none;"></div>
+          </div>
+          <div class="card-face card-back">
+            <div class="jp-text" id="backJp">...</div>
+            <div class="sub-text" id="backEn">...</div>
+            <div class="sub-text" id="backRom" style="margin-top:4px; font-size:14px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-controls" id="vocabControls">
+        <button class="btn" id="btnPrev">← Prev</button>
+        <button class="btn btn-primary" id="btnNext">Next →</button>
+      </div>
+      <div class="card-controls" id="sentenceControls" style="display:none;">
+        <button class="btn btn-primary" id="btnGenerate">Generate New Sentence</button>
+      </div>
+      
+      <div class="hint" style="text-align:center;">Tip: Press <strong>Spacebar</strong> to flip the card.</div>
+    </div>
+
+    <div class="right-panel">
+      <div class="panel-box">
+        <div class="panel-header">
+          <div class="panel-title">Quick Quiz</div>
+          <div class="stats">Score: <span id="valScore">0</span> &nbsp;|&nbsp; Streak: <span id="valStreak">0</span></div>
+        </div>
+        
+        <div class="input-wrapper">
+          <input type="text" id="answerInput" class="input-field" placeholder="Type the English meaning or romaji..." autocomplete="off">
+          <div class="hint">Press <strong>Enter</strong> to submit.</div>
+          <div id="feedbackBox" class="feedback"></div>
+        </div>
+
+        <div class="card-controls" style="margin-top: 16px;">
+          <button class="btn" id="btnReveal">Reveal Answer</button>
+          <button class="btn" id="btnResetStats">Reset Stats</button>
+        </div>
+      </div>
+
+      <div class="panel-box">
+        <div class="panel-title">Settings</div>
+        <div class="settings-grid">
+          <label class="setting-label"><input type="checkbox" id="setRomajiFront"> Show Romaji on front</label>
+          <label class="setting-label"><input type="checkbox" id="setAutoNext" checked> Auto-next on correct</label>
+          <label class="setting-label"><input type="checkbox" id="setStrict"> Strict text matching</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <span style="font-size: smaller;">Names from 8M 2026. Made by Nathan, ChatGPT and Gemini. Use for revision. Content is from iiTomo. Report bugs to nathan.liu7@education.nsw.gov.au</span>
+</div>
+
+<script>
+/* ====== DATA Dictionary ====== */
+const DATA = {
+  animals: [
+    {jp:"いぬ", en:"dog", rom:"inu"}, {jp:"うさぎ", en:"rabbit", rom:"usagi"},
+    {jp:"うし", en:"cow", rom:"ushi"}, {jp:"うま", en:"horse", rom:"uma"},
+    {jp:"かめ", en:"turtle", rom:"kame"}, {jp:"さかな", en:"fish", rom:"sakana"},
+    {jp:"さる", en:"monkey", rom:"saru"}, {jp:"ぞう", en:"elephant", rom:"zou"},
+    {jp:"とり", en:"bird", rom:"tori"}, {jp:"ねこ", en:"cat", rom:"neko"},
+    {jp:"ねずみ", en:"mouse / rat", rom:"nezumi"}, {jp:"ひつじ", en:"sheep", rom:"hitsuji"},
+    {jp:"ぶた", en:"pig", rom:"buta"}, {jp:"へび", en:"snake", rom:"hebi"},
+    {jp:"ペット", en:"pet", rom:"petto"}
+  ],
+  colours: [
+    {jp:"いろ", en:"colour", rom:"iro"}, {jp:"あお", en:"blue", rom:"ao"},
+    {jp:"あか", en:"red", rom:"aka"}, {jp:"きいろ", en:"yellow", rom:"kiiro"},
+    {jp:"くろ", en:"black", rom:"kuro"}, {jp:"しろ", en:"white", rom:"shiro"},
+    {jp:"ちゃいろ", en:"brown", rom:"chairo"}, {jp:"みどり", en:"green", rom:"midori"},
+    {jp:"むらさき", en:"purple", rom:"murasaki"}
+  ],
+  people: [
+    {jp:"わたし", en:"I", rom:"watashi"}, {jp:"ぼく", en:"I (boys)", rom:"boku"},
+    {jp:"せんせい", en:"the teacher", rom:"sensei"}, {jp:"ともだち", en:"my friend", rom:"tomodachi"},
+    {jp:"みなさん", en:"everyone", rom:"minasan"}
+  ],
+  countries: [
+    {jp:"にほん", en:"Japan", rom:"nihon"}, {jp:"オーストラリア", en:"Australia", rom:"oosutoraria"}
+  ],
+  endings: [
+    {jp:"すきです", en:"like", rom:"suki desu"}, {jp:"きらいです", en:"dislike", rom:"kirai desu"},
+    {jp:"まあまあです", en:"okay / so-so", rom:"maamaa desu"}
+  ],
+  greetings: [
+    {jp:"はじめまして", en:"nice to meet you", rom:"hajimemashite"},
+    {jp:"こんにちは", en:"hello", rom:"konnichiwa"}, {jp:"おはよう", en:"good morning", rom:"ohayou"},
+    {jp:"さようなら", en:"goodbye", rom:"sayounara"}, {jp:"じゃあね", en:"see you", rom:"jaane"}
+  ],
+  basics: [
+    {jp:"はい", en:"yes", rom:"hai"}, {jp:"いいえ", en:"no", rom:"iie"},
+    {jp:"ありがとう", en:"thank you", rom:"arigatou"}, {jp:"どうぞ", en:"here you go", rom:"douzo"},
+    {jp:"おいしい", en:"tasty", rom:"oishii"}, {jp:"します", en:"do / play", rom:"shimasu"},
+    {jp:"しません", en:"do not do", rom:"shimasen"}
+  ],
+  classroom: [
+    {jp:"いってください", en:"please say", rom:"itte kudasai"},
+    {jp:"きいてください", en:"please listen", rom:"kiite kudasai"},
+    {jp:"みてください", en:"please look", rom:"mite kudasai"},
+    {jp:"かいてください", en:"please write", rom:"kaite kudasai"},
+    {jp:"よんでください", en:"please read", rom:"yonde kudasai"},
+    {jp:"すわってください", en:"please sit", rom:"suwatte kudasai"},
+    {jp:"たってください", en:"please stand", rom:"tatte kudasai"},
+    {jp:"れい", en:"bow", rom:"rei"},
+    {jp:"きりつ", en:"stand up", rom:"kiritsu"},
+    {jp:"ちゃくせき", en:"sit down", rom:"chakuseki"},
+    {jp:"すみません", en:"excuse me / sorry", rom:"sumimasen"},
+    {jp:"ごめんなさい", en:"I am sorry / sorry", rom:"gomenasai"},
+    {jp:"わかります", en:"I understand", rom:"wakarimasu"},
+    {jp:"わかりません", en:"I don't understand", rom:"wakarimasen"}
+  ],
+  numbers: [
+    {jp:"いち", en:"1", rom:"ichi"}, {jp:"に", en:"2", rom:"ni"},
+    {jp:"さん", en:"3", rom:"san"}, {jp:"よん", en:"4", rom:"yon"},
+    {jp:"ご", en:"5", rom:"go"}, {jp:"ろく", en:"6", rom:"roku"},
+    {jp:"なな", en:"7", rom:"nana"}, {jp:"はち", en:"8", rom:"hachi"},
+    {jp:"きゅう", en:"9", rom:"kyuu"}, {jp:"じゅう", en:"10", rom:"juu"}
+  ],
+  names: [
+    {jp:"Juno", en:"Juno", rom:"juno"}, {jp:"Rish", en:"Rish", rom:"rish"}, {jp:"Edwin", en:"Edwin", rom:"edwin"}, {jp:"Isaac", en:"Isaac", rom:"isaac"}, {jp:"Nathan", en:"Nathan", rom:"nathan"}, {jp:"Mri", en:"Mri", rom:"mri"}, {jp:"Alex", en:"Alex", rom:"alex"}, {jp:"Jeremy", en:"Jeremy", rom:"jeremy"}, {jp:"Jayden", en:"Jayden", rom:"jayden"}, {jp:"Darrel", en:"Darrel", rom:"darrel"}, {jp:"Joel", en:"Joel", rom:"joel"}, {jp:"Martin", en:"Martin", rom:"martin"}, {jp:"Warren", en:"Warren", rom:"warren"}, {jp:"Derrick", en:"Derrick", rom:"derrick"}, {jp:"Samarth", en:"Samarth", rom:"samarth"}, {jp:"Christian", en:"Christian", rom:"christian"}, {jp:"Dylan", en:"Dylan", rom:"dylan"}, {jp:"Anhad", en:"Anhad", rom:"anhad"}, {jp:"Soumik", en:"Soumik", rom:"soumik"}, {jp:"Avi", en:"Avi", rom:"avi"}, {jp:"Benjamin", en:"Benjamin", rom:"benjamin"}, {jp:"Eric", en:"Eric", rom:"eric"}, {jp:"Ethan", en:"Ethan", rom:"ethan"}, {jp:"Jamie", en:"Jamie", rom:"jamie"}, {jp:"Jason", en:"Jason", rom:"jason"}, {jp:"Jacob", en:"Jacob", rom:"jacob"}, {jp:"Jaden", en:"Jaden", rom:"jaden"}, {jp:"Kevin", en:"Kevin", rom:"kevin"}
+  ]
+};
+
+const CATEGORY_LABELS = {
+  animals: "Animals", colours: "Colours", people: "People", countries: "Countries",
+  endings: "Likes and Dislikes", greetings: "Greetings", basics: "Useful Words",
+  classroom: "Classroom Phrases", numbers: "Numbers", names: "Names"
+};
+
+/* ====== SMART SENTENCE TEMPLATES ====== */
+const TEMPLATES = [
+  {
+    jp: "{A} が {E}", types: { A: "animals", E: "endings" }, explain: "Likes & Dislikes",
+    buildEn: (w) => `I ${w.E.en} ${w.A.en}s`, buildRom: (w) => `${w.A.rom} ga ${w.E.rom}`
+  },
+  {
+    jp: "{P} は {C}じん です", types: { P: "people", C: "countries" }, explain: "Nationality",
+    buildEn: (w) => {
+      const subj = w.P.en.replace(" (boys)", "");
+      const verb = subj.toLowerCase() === "i" ? "am" : "is";
+      return `${subj} ${verb} from ${w.C.en}`;
+    },
+    buildRom: (w) => `${w.P.rom} wa ${w.C.rom}jin desu`
+  },
+  {
+    jp: "{A} は なにいろ ですか", types: { A: "animals" }, explain: "Color Question",
+    buildEn: (w) => `What color is the ${w.A.en}?`, buildRom: (w) => `${w.A.rom} wa nani iro desu ka`
+  },
+  {
+    jp: "{A} が すき ですか", types: { A: "animals" }, explain: "Preference Question",
+    buildEn: (w) => `Do you like ${w.A.en}s?`, buildRom: (w) => `${w.A.rom} ga suki desu ka`
+  },
+  {
+    jp: "{C} が すき ですか", types: { C: "colours" }, explain: "Preference Question",
+    buildEn: (w) => `Do you like ${w.C.en}?`, buildRom: (w) => `${w.C.rom} ga suki desu ka`
+  },
+  {
+    jp: "わたし は {N} です", types: { N: "names" }, explain: "Introduction",
+    buildEn: (w) => `I am ${w.N.en}`, buildRom: (w) => `watashi wa ${w.N.rom} desu`
+  },
+  {
+    jp: "{A} です", types: { A: "animals" }, explain: "Identification",
+    buildEn: (w) => `It is a ${w.A.en}`, buildRom: (w) => `${w.A.rom} desu`
+  },
+  {
+    jp: "{Num} さい です", types: { Num: "numbers" }, explain: "Stating Age",
+    buildEn: (w) => `I am ${w.Num.en} years old`, buildRom: (w) => `${w.Num.rom} sai desu`
+  }
+];
+
+let mode = "vocab"; let pool = []; let currentIndex = 0; let currentItem = null; let score = 0, streak = 0;
+
+const card = document.getElementById("studyCard");
+const frontJp = document.getElementById("frontJp");
+const frontHint = document.getElementById("frontHint");
+const backJp = document.getElementById("backJp");
+const backEn = document.getElementById("backEn");
+const backRom = document.getElementById("backRom");
+const cardBadge = document.getElementById("cardBadge");
+const answerInput = document.getElementById("answerInput");
+const feedbackBox = document.getElementById("feedbackBox");
+
+function isTypo(s1, s2) {
+    if (s1 === s2) return true;
+    if (Math.abs(s1.length - s2.length) > 1) return false;
+    if (s1.length === s2.length) {
+        let diffs = 0; for (let i = 0; i < s1.length; i++) { if (s1[i] !== s2[i]) diffs++; }
+        return diffs === 1;
+    }
+    let longer = s1.length > s2.length ? s1 : s2;
+    let shorter = s1.length > s2.length ? s2 : s1;
+    for (let i = 0; i < longer.length; i++) { if (longer.slice(0, i) + longer.slice(i + 1) === shorter) return true; }
+    return false;
+}
+
+function buildPool() {
+  pool = [];
+  Object.keys(DATA).forEach(key => {
+    // Hide 'names' from Vocab flashcards
+    if (key === 'names') return; 
+    
+    DATA[key].forEach(word => {
+      const label = CATEGORY_LABELS[key] || key;
+      pool.push({...word, category: label});
+    });
+  });
+  pool.sort(() => Math.random() - 0.5);
+}
+
+function renderCard(item) {
+  currentItem = item; card.classList.remove("is-flipped");
+  frontJp.innerText = item.jp; backJp.innerText = item.jp;
+  backEn.innerText = item.en; backRom.innerText = item.rom;
+  cardBadge.innerText = item.category || "Sentence";
+  frontHint.style.display = document.getElementById("setRomajiFront").checked ? "block" : "none";
+  frontHint.innerText = item.rom; answerInput.value = ""; feedbackBox.className = "feedback";
+}
+
+function nextVocab(dir = 1) {
+  if (pool.length === 0) return;
+  currentIndex = (currentIndex + dir + pool.length) % pool.length;
+  let baseEn = pool[currentIndex].en.toLowerCase().replace(" (boys)", "").replace("the ", "");
+  renderCard({ ...pool[currentIndex], keywords: [baseEn] });
+}
+
+function generateSentence() {
+  const tpl = TEMPLATES[Math.floor(Math.random() * TEMPLATES.length)];
+  let jpText = tpl.jp; let wordObjs = {}; let keywordRoots = [];
+  Object.keys(tpl.types).forEach(placeholderKey => {
+    const bankName = tpl.types[placeholderKey];
+    const pickedWord = DATA[bankName][Math.floor(Math.random() * DATA[bankName].length)];
+    wordObjs[placeholderKey] = pickedWord;
+    jpText = jpText.replace(`{${placeholderKey}}`, pickedWord.jp);
+    let cleanWord = pickedWord.en.toLowerCase().replace(" (boys)", "").replace("the ", "").replace("my ", "");
+    keywordRoots.push(cleanWord);
+  });
+  const exactEnglish = tpl.buildEn(wordObjs); const exactRomaji = tpl.buildRom(wordObjs);
+  renderCard({ jp: jpText, en: exactEnglish, rom: exactRomaji, category: tpl.explain, keywords: keywordRoots.length > 0 ? keywordRoots : [exactEnglish.toLowerCase()] });
+}
+
+function checkAnswer() {
+  const input = answerInput.value.trim().toLowerCase(); if (!input) return;
+  const isStrict = document.getElementById("setStrict").checked; let isCorrect = false;
+  const cleanEn = currentItem.en.toLowerCase().replace(/\s*\(.*?\)\s*/g, "").trim();
+  const targets = cleanEn.split(/\s*\/\s*/); targets.push(currentItem.rom.toLowerCase());
+
+  for (let target of targets) {
+    if (input === target) { isCorrect = true; break; }
+    if (!isStrict && target.length > 2 && isTypo(input, target)) { isCorrect = true; break; }
+  }
+
+  if (!isCorrect && !isStrict && mode === "sentence") {
+    let matches = 0;
+    currentItem.keywords.forEach(kw => { 
+      let found = input.includes(kw) || input.includes(kw + 's');
+      if (!found && kw.length > 2) {
+        const inputWords = input.split(/\s+/);
+        if (inputWords.some(w => isTypo(w, kw))) found = true;
+      }
+      if (found) matches++;
+    });
+    isCorrect = (matches >= currentItem.keywords.length);
+  }
+
+  if (!isCorrect && !isNaN(input) && currentItem.en.includes(input)) isCorrect = true;
+  handleResult(isCorrect);
+}
+
+function handleResult(isCorrect) {
+  feedbackBox.className = "feedback show " + (isCorrect ? "ok" : "bad");
+  if (isCorrect) {
+    score++; streak++; feedbackBox.innerText = "Correct! ✅"; triggerConfetti();
+    if (document.getElementById("setAutoNext").checked) {
+      setTimeout(() => { mode === "vocab" ? nextVocab(1) : generateSentence(); answerInput.focus(); }, 800);
+    }
+  } else {
+    streak = 0; feedbackBox.innerHTML = `Not quite. Translation:<br><strong>${currentItem.en}</strong><br><em>(${currentItem.rom})</em>`;
+    card.classList.add("is-flipped");
+  }
+  updateStats();
+}
+
+function triggerConfetti() {
+  const colors = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b"];
+  for (let i = 0; i < 15; i++) {
+    const el = document.createElement("div"); el.className = "confetti";
+    el.style.left = `calc(50% + ${(Math.random() - 0.5) * 150}px)`; el.style.top = `calc(50% - 50px)`;
+    el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animation = `drop ${0.5 + Math.random() * 0.5}s ease forwards`;
+    document.body.appendChild(el); setTimeout(() => el.remove(), 1000);
+  }
+}
+
+function updateStats() { document.getElementById("valScore").innerText = score; document.getElementById("valStreak").innerText = streak; }
+
+document.getElementById("btnVocab").addEventListener("click", (e) => {
+  mode = "vocab"; e.target.classList.add("active");
+  document.getElementById("btnSentences").classList.remove("active");
+  document.getElementById("vocabControls").style.display = "flex";
+  document.getElementById("sentenceControls").style.display = "none";
+  nextVocab(0);
+});
+
+document.getElementById("btnSentences").addEventListener("click", (e) => {
+  mode = "sentence"; e.target.classList.add("active");
+  document.getElementById("btnVocab").classList.remove("active");
+  document.getElementById("vocabControls").style.display = "none";
+  document.getElementById("sentenceControls").style.display = "flex";
+  generateSentence();
+});
+
+document.getElementById("btnNext").addEventListener("click", () => nextVocab(1));
+document.getElementById("btnPrev").addEventListener("click", () => nextVocab(-1));
+document.getElementById("btnGenerate").addEventListener("click", generateSentence);
+document.getElementById("studyCard").addEventListener("click", () => card.classList.toggle("is-flipped"));
+document.getElementById("btnReveal").addEventListener("click", () => {
+  card.classList.add("is-flipped"); feedbackBox.className = "feedback show bad";
+  feedbackBox.innerHTML = `Answer:<br><strong>${currentItem.en}</strong><br><em>(${currentItem.rom})</em>`;
+  streak = 0; updateStats();
+});
+document.getElementById("btnResetStats").addEventListener("click", () => {
+  score = 0; streak = 0; updateStats(); feedbackBox.className = "feedback";
+});
+document.getElementById("setRomajiFront").addEventListener("change", () => renderCard(currentItem));
+answerInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); checkAnswer(); } });
+document.addEventListener("keydown", (e) => { if (e.code === "Space" && e.target !== answerInput) { e.preventDefault(); card.classList.toggle("is-flipped"); } });
+
+buildPool(); nextVocab(0);
+</script>
+</body>
+</html>
