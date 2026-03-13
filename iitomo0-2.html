@@ -331,6 +331,10 @@ const TEMPLATES = [
     buildEn: (w) => `Do you like ${w.C.en}?`, buildRom: (w) => `${w.C.rom} ga suki desu ka`
   },
   {
+    jp: "{N} が すき ですか", types: { N: "names" }, explain: "Preference Question",
+    buildEn: (w) => `Do you like ${w.N.en}?`, buildRom: (w) => `${w.N.rom} ga suki desu ka`
+  },
+  {
     jp: "わたし は {N} です", types: { N: "names" }, explain: "Introduction",
     buildEn: (w) => `I am ${w.N.en}`, buildRom: (w) => `watashi wa ${w.N.rom} desu`
   },
