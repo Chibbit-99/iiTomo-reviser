@@ -33,18 +33,27 @@ body {
 .app {
   width: 1000px;
   max-width: 100%;
+  height: 90vh; /* Set a height relative to the viewport */
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   border-radius: 16px;
   box-shadow: var(--shadow);
   padding: 24px;
   border: var(--border);
-  display: flex; flex-direction: column; gap: 20px;
+  display: flex; 
+  flex-direction: column; 
+  gap: 20px;
+  overflow: hidden; /* Prevent the outer container from scrolling */
 }
-
 .header {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
-  gap: 16px; padding-bottom: 16px; border-bottom: var(--border);
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  flex-wrap: wrap;
+  gap: 16px; 
+  padding-bottom: 16px; 
+  border-bottom: var(--border);
+  flex-shrink: 0; /* Ensures the header doesn't squash */
 }
 .brand { display: flex; gap: 16px; align-items: center; }
 .logo {
@@ -69,7 +78,13 @@ body {
   background: var(--card); color: var(--accent-2); box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.main { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.main { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 24px; 
+  overflow-y: auto; /* Enable vertical scrolling only for content */
+  padding-right: 8px; /* Space for the scrollbar */
+}
 .left-panel { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .card-scene { perspective: 1000px; width: 100%; height: 240px; }
 .card {
@@ -138,6 +153,12 @@ body {
 
 .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
 .setting-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+
+/* Filter Specific Styling */
+.filter-section { border-top: var(--border); margin-top: 15px; padding-top: 15px; }
+.filter-btns { display: flex; gap: 8px; margin-bottom: 10px; }
+.btn-sm { padding: 4px 8px; font-size: 11px; border-radius: 6px; }
+.filter-scroll { max-height: 150px; overflow-y: auto; padding-right: 5px; }
 
 .confetti {
   position: fixed; width: 8px; height: 8px; border-radius: 2px;
@@ -214,7 +235,20 @@ body {
       </div>
 
       <div class="panel-box">
-        <div class="panel-title">Settings</div>
+        <div class="panel-title">Settings & Filters</div>
+        
+        <div class="filter-section">
+            <div class="hint" style="margin-bottom: 8px;"><strong>Select Categories to Revise:</strong></div>
+            <div class="filter-btns">
+                <button class="btn btn-sm" id="btnFilterAll">Select All</button>
+                <button class="btn btn-sm" id="btnFilterNone">Deselect All</button>
+            </div>
+            <div class="filter-scroll">
+                <div class="settings-grid" id="categoryFilterGrid" style="margin-top: 0;">
+                    </div>
+            </div>
+        </div>
+
         <div class="settings-grid">
           <label class="setting-label"><input type="checkbox" id="setRomajiFront"> Show Romaji on front</label>
           <label class="setting-label"><input type="checkbox" id="setAutoNext" checked> Auto-next on correct</label>
@@ -360,6 +394,29 @@ const cardBadge = document.getElementById("cardBadge");
 const answerInput = document.getElementById("answerInput");
 const feedbackBox = document.getElementById("feedbackBox");
 
+/* NEW: FILTER LOGIC FUNCTIONS */
+function initFilters() {
+    const grid = document.getElementById("categoryFilterGrid");
+    Object.keys(CATEGORY_LABELS).forEach(key => {
+        const label = document.createElement("label");
+        label.className = "setting-label";
+        const isChecked = key !== 'names' ? 'checked' : ''; // Default names to off
+        label.innerHTML = `<input type="checkbox" class="cat-cb" value="${key}" ${isChecked}> ${CATEGORY_LABELS[key]}`;
+        
+        label.querySelector('input').addEventListener('change', () => {
+            buildPool();
+            if(mode === "vocab") nextVocab(0);
+        });
+        grid.appendChild(label);
+    });
+}
+
+function toggleFilters(state) {
+    document.querySelectorAll('.cat-cb').forEach(cb => cb.checked = state);
+    buildPool();
+    if(mode === "vocab") nextVocab(0);
+}
+
 function isTypo(s1, s2) {
     if (s1 === s2) return true;
     if (Math.abs(s1.length - s2.length) > 1) return false;
@@ -374,17 +431,28 @@ function isTypo(s1, s2) {
 }
 
 function buildPool() {
+  const activeKeys = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value);
   pool = [];
-  Object.keys(DATA).forEach(key => {
-    // Hide 'names' from Vocab flashcards
-    if (key === 'names') return; 
+  
+  activeKeys.forEach(key => {
+    // Hide 'names' from Vocab flashcards logic as before, unless user specifically wants them?
+    // Let's allow them if checked, but original code excluded them.
+    if (key === 'names' && mode === "vocab") return; 
     
-    DATA[key].forEach(word => {
-      const label = CATEGORY_LABELS[key] || key;
-      pool.push({...word, category: label});
-    });
+    if(DATA[key]) {
+        DATA[key].forEach(word => {
+          const label = CATEGORY_LABELS[key] || key;
+          pool.push({...word, category: label});
+        });
+    }
   });
+
+  if (pool.length === 0) {
+      pool = [{jp: "(No Category Selected)", en: "Please check a category in settings", rom: "...", category: "System"}];
+  }
+  
   pool.sort(() => Math.random() - 0.5);
+  currentIndex = 0;
 }
 
 function renderCard(item) {
@@ -404,8 +472,21 @@ function nextVocab(dir = 1) {
 }
 
 function generateSentence() {
-  const tpl = TEMPLATES[Math.floor(Math.random() * TEMPLATES.length)];
+  const activeKeys = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value);
+  
+  // Filter templates to only those where we have the required categories selected
+  const validTemplates = TEMPLATES.filter(tpl => {
+      return Object.values(tpl.types).every(reqCat => activeKeys.includes(reqCat));
+  });
+
+  if (validTemplates.length === 0) {
+      renderCard({jp: "!", en: "Check more categories (like Animals/Endings) to generate sentences.", rom: "...", category: "Error"});
+      return;
+  }
+
+  const tpl = validTemplates[Math.floor(Math.random() * validTemplates.length)];
   let jpText = tpl.jp; let wordObjs = {}; let keywordRoots = [];
+  
   Object.keys(tpl.types).forEach(placeholderKey => {
     const bankName = tpl.types[placeholderKey];
     const pickedWord = DATA[bankName][Math.floor(Math.random() * DATA[bankName].length)];
@@ -414,6 +495,7 @@ function generateSentence() {
     let cleanWord = pickedWord.en.toLowerCase().replace(" (boys)", "").replace("the ", "").replace("my ", "");
     keywordRoots.push(cleanWord);
   });
+  
   const exactEnglish = tpl.buildEn(wordObjs); const exactRomaji = tpl.buildRom(wordObjs);
   renderCard({ jp: jpText, en: exactEnglish, rom: exactRomaji, category: tpl.explain, keywords: keywordRoots.length > 0 ? keywordRoots : [exactEnglish.toLowerCase()] });
 }
@@ -478,6 +560,7 @@ document.getElementById("btnVocab").addEventListener("click", (e) => {
   document.getElementById("btnSentences").classList.remove("active");
   document.getElementById("vocabControls").style.display = "flex";
   document.getElementById("sentenceControls").style.display = "none";
+  buildPool();
   nextVocab(0);
 });
 
@@ -502,10 +585,16 @@ document.getElementById("btnResetStats").addEventListener("click", () => {
   score = 0; streak = 0; updateStats(); feedbackBox.className = "feedback";
 });
 document.getElementById("setRomajiFront").addEventListener("change", () => renderCard(currentItem));
+document.getElementById("btnFilterAll").addEventListener("click", () => toggleFilters(true));
+document.getElementById("btnFilterNone").addEventListener("click", () => toggleFilters(false));
+
 answerInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); checkAnswer(); } });
 document.addEventListener("keydown", (e) => { if (e.code === "Space" && e.target !== answerInput) { e.preventDefault(); card.classList.toggle("is-flipped"); } });
 
-buildPool(); nextVocab(0);
+// Initial Start
+initFilters();
+buildPool(); 
+nextVocab(0);
 </script>
 </body>
 </html>
