@@ -400,7 +400,7 @@ function initFilters() {
     Object.keys(CATEGORY_LABELS).forEach(key => {
         const label = document.createElement("label");
         label.className = "setting-label";
-        const isChecked = key !== 'names' ? 'checked' : ''; // Default names to off
+        const isChecked = key !== 'bob' ? 'checked' : ''; // Default names to off
         label.innerHTML = `<input type="checkbox" class="cat-cb" value="${key}" ${isChecked}> ${CATEGORY_LABELS[key]}`;
         
         label.querySelector('input').addEventListener('change', () => {
